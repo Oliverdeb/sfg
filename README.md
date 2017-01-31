@@ -1,5 +1,5 @@
 # Site File Generator
-This tool was created during an internship, takes an input file containg a list of salt masters and Chassis Management Controllers (CMCs) and generates an output containing an inventory of all reachable servers.
+This tool was created during an internship, it takes an input file containg a list of salt masters and Chassis Management Controllers (CMCs) and generates an output containing an inventory of all reachable servers.
 
 ## Information sources
 Most information is obtained directly from the salt masters, however, specific information (e.g. drive information, dimm info, raid controllers etc) is obtained by querying the iDRACs via SNMP. 
