@@ -34,39 +34,6 @@ dontdisplay=[ 'kernelrelease', 'os', 'osrelease', 'sm',
 def main():
 	return render_template('index.html')
 
-def sm(node):
-	""" checks to see if the given node is a salt master """
-	""" salt masters are named in the format dcXXXXa """
-	""" therefore this just checks a node doesn't have a number in its name """
-	return not True in map(lambda x: str(x) in node, range(9))
-
-
-def remove_unnecessary_grains(salt_masters):
-
-	grains_to_del = ['ipv4', 'id', 'host', 'selinux', 'fqdn_ip6', 'virtual',
-						 'osrelease_info', 'ipv6', 'fqdn', 'domain', 
-						 'osarch', 'osfullname', 'cpuarch', 'lsb_distrib_id'
-						 , 'locale_info', 'ps',  'cpu_flags', 'localhost',
-						 'zmqversion', 'kernel', 'ip_interfaces', 'master',
-						 'pythonpath', 'fqdn_ip4', 'shell', 'nodename',
-						 'saltversioninfo', 'saltpath', 'biosreleasedate', 'os_family',
-						 'oscodename', 'pythonversion', 'osfinger', 'manufacturer',
-						 'num_gpus', 'server_id', 'osmajorrelease',
-						 'pythonexecutable', 'gpus', 'path', 'machine_id', 'ip6_interfaces', 'roles',
-						 'hostname', 'external_interfaces', 'internal_interfaces', 'volumes']
-						 
-
-
-	for key,value in salt_masters.iteritems():
-		if value == "Could not connect to server":
-			continue
-		for k in value:
-			#salt_masters[key][k]['sm'] = sm(k)
-			for grain in grains_to_del:
-				if grain in salt_masters[key][k]:
-					del salt_masters[key][k][grain]
-
-	return salt_masters
 
 def condense_fields(salt_masters):
 	""" iterates through all the nodes and creates a combined IP field """
@@ -261,7 +228,6 @@ def get_grains(file):
 		t.start()
 	for t in idrac_threads:
 		t.join()
-	salt_masters = remove_unnecessary_grains(salt_masters)
 	condense_fields(salt_masters)
 
 	print timeit.default_timer() - start_time
