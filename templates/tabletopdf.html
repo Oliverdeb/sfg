@@ -1,0 +1,86 @@
+
+ <!-- This is the HTML template that is converted to PDF -->
+ 
+<table class = "table tablesm table-striped table-bordered table-hover table-condensed" >
+
+	{% macro columnheadings(grains) %}
+	<thead>
+			<tr> 
+				<th data-header="node" ><div class="dragtable-drag-handle"></div> Node </th> <!--  -->
+
+				{% for k in headings %}
+					<th data-header="{{k}}" class="{{k}}"  > {{ k }}</th>
+				{% endfor %}
+
+			</tr>
+	</thead>
+	{% endmacro %}
+
+	{% macro tablegen(grains) %} 
+		{% for key, value in grains.iteritems() if key != "sm" %}
+			{% if grains[key]['sm'] %}
+			<tr class="info">
+				{% else %}
+			<tr>
+				{% endif %}
+				{# <th scope="row" > {{ key }} </th> #}
+				<td> {{ key }} </td>
+
+				{% for k, v in value.iteritems() if k in headings %}
+
+					{% if v is mapping%}
+					<td class="{{k}}" >
+						{% for x, y in v.iteritems() if x != "lo" recursive %}
+							{% if y is mapping %}
+								{{x }}: {{ loop (y.iteritems()) }}
+							{% elif y is iterable and y is not string and y != [] %}
+							{{ x }}:
+				   				{% for item in y -%}
+									{{ item }}{% if not loop.last%},{% endif %}  				
+								{%- endfor %}{% if not loop.last%}; {% endif %} 
+							{% elif y != [] %}
+								{{ x }}: {{ y }}{% if not loop.last%}; {% endif %} 
+							{% endif %}
+
+						{% endfor %}
+		       				
+					</td>
+		   			{% elif v is iterable and v is not string and v != [] %}
+		   			<td class="{{k}}" >
+		   				{% for item in v -%}
+							{{ item }}{% if not loop.last%}, {% endif %}   				
+						{%- endfor %}
+	   				</td>
+		   			{% elif v != "" and v != None and v != [] %}
+		   			<td class="{{k}}" >
+					 {{ v }} 
+					 </td>
+					{% else %}
+					 <td class="{{k}}" >None</td>
+					{% endif %}
+
+				{% endfor %}
+				
+			</tr>
+		{% endfor %}	
+	{% endmacro %}
+	{{ columnheadings(headings) }}
+	{% if todisplay == "*" %}
+		{% for v in grains.itervalues() if v != "Could not connect to server" %}
+			<tbody>
+				{{ tablegen(v) }}
+				{% if not loop.last %}<tr><th scope="row" colspan="18"> <hr> </th></tr>{% endif %}
+			</tbody>
+		{% endfor %}
+	{% else %}
+		<tbody>
+		{{ tablegen(grains[todisplay]) }}
+		</tbody>
+
+
+		
+	
+	
+	{% endif %}
+</table>
+

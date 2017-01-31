@@ -1,0 +1,12 @@
+{
+  "saltmasters": [
+	"172.16.99.13"
+  ],
+  "username": "root",
+  "password": "password",
+  "cmc_ips": {
+  	"172.16.71.15": {"username": "root", "password": "pass"}
+  }
+}
+
+

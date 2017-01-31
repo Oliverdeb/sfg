@@ -1,0 +1,235 @@
+
+<!-- This is the main HTML page for the output, generates the drop down list and div for the table to be inserted via AJAX -->
+
+<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="static/js/jquery-3.1.1.min.js"></script>
+    <!-- <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.js"></script> -->
+    <script src="static/js/jquery.treeview.js"></script>
+    <script src="static/js/jquery.cookie.js"></script>
+
+
+    <!-- <link rel="stylesheet" href="static/css/screen.css" /> -->
+    <link rel ="stylesheet" href="static/css/jquery.treeview.css"/>
+    <link rel ="stylesheet" href="static/css/dragtable-default.css"/>
+    <!-- <link rel ="stylesheet" href="static/css/jquery-ui.theme.css"/> -->
+    <!-- <link rel ="stylesheet" href="static/css/jquery-ui.structure.css"/> -->
+    <link rel ="stylesheet" href="static/css/jquery-ui.min.css"/>
+
+    <script type="text/javascript" src="static/js/control.js"></script>
+    <script type="text/javascript" src="static/js/jquery-ui.min.js"></script>
+    <!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script> -->
+
+    <script type="text/javascript" src="static/js/jquery.dragtable.js"></script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/jumbotron-narrow.css" rel="stylesheet">
+
+    <script>
+
+    function topdf(elem){
+    	var selected = []
+    	$("input:checked").each(
+    		function (){
+    				selected.push($(this).val())
+    		}
+		);
+
+		$.ajax (
+		{
+			type:"GET",
+    		url:"{{ url_for('generate_pdf') }}",
+    		contentType: 'application/pdf; charset=utf-8',
+    		// dataType: "json",
+    		traditional: true,
+    		data: {
+    			key: elem.value,
+    			selected: JSON.stringify(selected)
+    		},
+
+    		success: function (response) {
+			displaydialog("PDF", response)    		
+    	},
+    		error: function (x, e){
+    		}
+
+		});
+    }
+
+    function displaydialog(type, response){
+    	$('#filepath').text(type + " downloaded to " + response);
+		$( "#dialog" ).dialog();
+    }
+
+    function toexcel(){
+    	$.ajax(
+    	{
+    		type:"GET",
+    		url:"{{ url_for('generate_excel') }}",
+    		data: {
+
+    		},
+
+    		success: function(response){
+    			displaydialog("Workbook", response)
+    		}, 
+    		error: function(){
+    			alert("err")
+    		}
+    	});
+    }
+
+    function ajax_table_update(val){
+    	$.ajax(
+    	{
+    		type:"GET",
+    		url:"{{ url_for('render_table') }}",
+    		data: {key: val},
+
+    		success: function (data) {
+    			$("#tableright").html(data);
+    			$("#genpdf").val(val);
+    			$('.flexdivs').show();
+    			$('table').dragtable();
+    			filtertable();
+    		},
+    		error: function (x, e){
+    			console.log("err")
+    		}
+
+    	});
+
+    }
+
+    function filtertable(){
+    	$("input").each(
+    		function(){
+    			filterby(this);
+    		}
+		)
+    }
+
+    function filterby(elem){
+    	if (elem.checked){
+    		$('.'+elem.value).show()
+    	}else{
+    		$('.'+elem.value).hide()
+    	}
+    }
+    </script>
+    <style>
+
+    .width{
+    	width:30%;    	
+    }
+
+    .flexdivs{
+    	padding: 10px;
+    	flex: 0 1 auto;
+    	border: 1px;
+    	border-style: solid;
+    	margin-right: 10px;
+    	margin-left: 10px;
+    }
+
+    @media screen and (max-width: 1000px) {
+      .width {
+         width: 300px;
+         overflow: hidden;
+         margin: 0 -150px 0 -150px;
+      }
+   }
+
+    .wrapper{
+    	display:flex;
+    	display: -webkit-flex;
+    	justify-content: space-between;
+    }
+    </style>
+
+	<title>Output</title>
+</head>
+<body>
+<div id="dialog" title ="File downloaded"><p id="filepath"></p> </div>
+<div class="container">
+	<div class="header">
+	            <nav>
+	                <ul class="nav nav-pills pull-right">
+	                    <li role="presentation" class="active"><a href="/">Home</a>
+	                    </li>
+	                </ul>
+	            </nav>
+
+	            <h3 class="text-muted">Site file generator</h3>
+	        </div>
+ </div>
+ 	<div class ="wrapper">
+	 	<div class="flexdivs" style="" >
+		    <h3>Salt masters and their minions</h3>
+		    <ul id="black" class="treeview-black" style="">
+		        {%- for key, value in grains.iteritems() recursive %}
+		        	<li {% if grains[key] != "Could not connect to server" %} class = "closed" {% else %} class = "open" {% endif %}> 
+
+		        		<span > 
+		        			{% if loop.depth0 == 0 and grains[key] != "Could not connect to server" %}
+		        				<a onclick="ajax_table_update('{{ key }}')" >{{ key }} - {{ grains[key]['sm'] }} </a>		        			
+	        			 	{% else %}
+	        			  		{{ key }}
+		        			{% endif %}
+		        		</span>
+		        		<ul>
+		        		{% if value is mapping %}
+		       				{{ loop (value.iteritems()) }}
+		       			{% elif value is iterable and value is not string %}
+		       			
+		       				{% for item in value %}
+		       					<li><span> {{ item }} </span></li>
+		       				{% endfor %}
+		       			
+		       			{% else %}
+		       				
+		       					<li><span
+		       					{##}>
+	       					 		{{ value }} </span></li>
+		       				
+		       			{% endif %}   
+		       			</ul>    			
+		       		</li>
+		       	{% endfor %}
+		    </ul>
+		  		<button class="btn btn-primary" onclick="ajax_table_update('*')"> Display all </button>
+	  		<br>
+	  		<br>
+  		<p style="text-align: right" class='bg-info'>*Drag column headings to change the order of columns</p>
+	    </div>
+	    <div class="flexdivs" style="display:none;">
+	    	<div style="display:block;"><h3 style="display:block"> Filter columns </h3></div>
+	    	<div style="display:block;-moz-column-count:3; /* Firefox */
+				-webkit-column-count:3; /* Safari and Chrome */
+				column-count:3; ">
+	    	{% for heading in headings %}
+	    		<label>
+	    			<input type="checkbox" value="{{heading}}" {% if not heading in dontdisplay %} checked {%endif%} onchange="filterby(this)"> {{heading}} 
+	    		</label>
+	    		<br>
+	    	{% endfor %}
+	    	</div>
+	    </div>
+	</div>
+	    <br>
+	    <div id = "tableright" style="font-size:8" class= "table-responsive">
+
+	    </div>
+		<div style="margin-left: 10px;">
+		<button class="btn btn-primary" id ="genpdf" val="" onclick="topdf(this)">Export to PDF (displayed)</button>
+	    <button class="btn btn-primary" onclick="toexcel()" >Export to Excel (all)</button>
+		</div>
+
+   
+</body>
+ 
+</html>
+
